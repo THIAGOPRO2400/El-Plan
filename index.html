@@ -156,66 +156,27 @@ function apply(changes){
 function render(){
  const nextButton=document.getElementById("continue");
  if(nextButton) nextButton.classList.add("hidden");
-
  const s=scenes[state.current];
-
- // Mostrar u ocultar las relaciones según el momento de la historia
- const boxes=document.querySelectorAll(".box");
- let relationsBox=null;
-
- boxes.forEach(box=>{
-   const title=box.querySelector("h3");
-   if(title && title.textContent.trim()==="Relaciones"){
-     relationsBox=box;
-   }
- });
-
- if(relationsBox){
-   const showRelations=
-     state.current!=="prologo" &&
-     state.current!=="mensaje" &&
-     state.current!=="investigar";
-
-   relationsBox.style.display=showRelations ? "block" : "none";
- }
-
  document.getElementById("kicker").textContent=s.ch;
  document.getElementById("heading").textContent=s.title;
  document.getElementById("text").textContent=s.text;
  document.getElementById("chapter").textContent=s.ch;
  document.getElementById("count").textContent=state.history.length;
-
- document.getElementById("bar").style.width=
-   Math.min(100,state.history.length*9)+"%";
-
- ["sofia","elias","martin"].forEach(x=>{
-   document.getElementById(x).style.width=state.rel[x]+"%";
-   document.getElementById(x+"N").textContent=state.rel[x];
- });
-
- const box=document.getElementById("choices");
- box.innerHTML="";
-
+ document.getElementById("bar").style.width=Math.min(100,state.history.length*9)+"%";
+ ["sofia","elias","martin"].forEach(x=>{document.getElementById(x).style.width=state.rel[x]+"%";document.getElementById(x+"N").textContent=state.rel[x]});
+ const box=document.getElementById("choices");box.innerHTML="";
  document.getElementById("notice").classList.add("hidden");
-
  s.choices.forEach(c=>{
-   const b=document.createElement("button");
-   b.className="choice";
-   b.innerHTML="<b>"+c[0]+"</b><span>"+c[1]+"</span>";
-   b.onclick=()=>choose(c);
-   box.appendChild(b);
+  const b=document.createElement("button");b.className="choice";
+  b.innerHTML="<b>"+c[0]+"</b><span>"+c[1]+"</span>";
+  b.onclick=()=>choose(c);box.appendChild(b);
  });
-
  if(!s.choices.length){
-   document.getElementById("bar").style.width="100%";
-   document.getElementById("notice").classList.remove("hidden");
-
-   document.getElementById("notice").innerHTML=
-     "<strong>Historia terminada.</strong> Reinicia para descubrir otro final.";
+  document.getElementById("bar").style.width="100%";
+  document.getElementById("notice").classList.remove("hidden");
+  document.getElementById("notice").innerHTML="<strong>Historia terminada.</strong> Reinicia para descubrir otro final.";
  }
-
- document.getElementById("back").disabled=
-   state.history.length===0;
+ document.getElementById("back").disabled=state.history.length===0;
 }
 function choose(c){
   // Save the current scene and relationships so "back" can undo the decision.
