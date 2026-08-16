@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EL PLAN — Historia Interactiva</title>
+<style>
+:root{--bg:#0d1117;--panel:#161d27;--panel2:#1d2633;--text:#edf2f7;--muted:#9aa7b8;--line:#303b4b;--accent:#8fb2ff;--danger:#ff8d8d}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,#0d1117,#121a24);color:var(--text);font-family:Inter,Arial,sans-serif;min-height:100vh}
+.app{max-width:1000px;margin:auto;padding:22px}.top{display:flex;justify-content:space-between;gap:20px;align-items:flex-end;border-bottom:1px solid var(--line);padding:8px 0 20px}
+.kicker{font-size:12px;letter-spacing:2px;color:var(--accent);font-weight:700}.title{font-size:42px;margin:6px 0}.sub{color:var(--muted)}
+.stats{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}.stat{background:var(--panel);border:1px solid var(--line);padding:10px 13px;border-radius:12px;font-size:13px}.stat b{display:block;font-size:18px;margin-top:2px}
+.progress{height:7px;background:#242d39;border-radius:20px;margin:20px 0;overflow:hidden}.progress i{display:block;height:100%;background:var(--accent);width:0;transition:.4s}
+.card{background:rgba(22,29,39,.96);border:1px solid var(--line);border-radius:20px;padding:30px;box-shadow:0 18px 50px #0006}
+.chapter{font-size:13px;color:var(--accent);font-weight:bold;letter-spacing:1px;text-transform:uppercase}.scene h2{font-size:30px;margin:9px 0 16px}.scene p{font-size:17px;line-height:1.75;color:#d9e0e9;margin:0 0 15px}
+.character{display:inline-block;padding:6px 9px;border-radius:8px;background:#242e3c;color:#dce5f2;font-size:12px;margin:3px}
+.choices{margin-top:24px;display:grid;gap:12px}.choice{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:14px;padding:18px;text-align:left;cursor:pointer;transition:.2s;font-size:15px}.choice:hover{border-color:var(--accent);transform:translateY(-2px)}.choice b{display:block;font-size:16px;margin-bottom:5px}.choice span{color:var(--muted);line-height:1.45}
+.notice{margin-top:20px;padding:17px;border-radius:13px;background:#202a37;border-left:4px solid var(--accent);line-height:1.55}.notice strong{display:block;margin-bottom:5px}
+.controls{display:flex;gap:10px;margin-top:22px}.control{border:0;border-radius:10px;padding:12px 16px;font-weight:bold;cursor:pointer}.restart{background:#303b4b;color:white}.back{background:#edf2f7;color:#10151d}
+.side{margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:14px}.box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}.box h3{margin:0 0 10px;font-size:15px}.rel{display:flex;justify-content:space-between;margin:7px 0;color:#cdd6e2;font-size:13px}.meter{height:5px;background:#283240;border-radius:9px;margin-top:4px}.meter i{display:block;height:100%;background:var(--accent);border-radius:9px}.hidden{display:none}
+.end{font-size:20px;line-height:1.7}.small{font-size:12px;color:#7f8b9d;margin-top:18px;text-align:center}
+@media(max-width:700px){.top{display:block}.stats{justify-content:flex-start;margin-top:15px}.title{font-size:34px}.side{grid-template-columns:1fr}.card{padding:22px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div>
+      <div class="kicker">FICCIÓN INTERACTIVA</div>
+      <div class="title">EL PLAN</div>
+      <div class="sub">Una historia donde tus decisiones cambian las relaciones, los secretos y el final.</div>
+    </div>
+    <div class="stats">
+      <div class="stat">Capítulo<b id="chapter">Prólogo</b></div>
+      <div class="stat">Decisiones<b id="count">0</b></div>
+    </div>
+  </div>
+  <div class="progress"><i id="bar"></i></div>
+
+  <div class="card">
+    <div class="scene">
+      <div class="chapter" id="kicker"></div>
+      <h2 id="heading"></h2>
+      <p id="text"></p>
+      <div id="chars"></div>
+    </div>
+    <div id="choices" class="choices"></div>
+    <div id="notice" class="notice hidden"></div>
+    <div class="controls">
+      <button id="continue" class="control back hidden">Continuar →</button>
+      <button id="back" class="control back">← Decisión anterior</button>
+      <button id="restart" class="control restart">Reiniciar historia</button>
+    </div>
+  </div>
+
+  <div class="side">
+    <div class="box">
+      <h3>Relaciones</h3>
+      <div class="rel">Sofía <span id="sofiaN">50</span></div><div class="meter"><i id="sofia"></i></div>
+      <div class="rel">Elías <span id="eliasN">50</span></div><div class="meter"><i id="elias"></i></div>
+      <div class="rel">Martín <span id="martinN">50</span></div><div class="meter"><i id="martin"></i></div>
+    </div>
+    <div class="box">
+      <h3>Secretos descubiertos</h3>
+      <div id="secrets" style="color:#aeb9c8;font-size:13px;line-height:1.6">Todavía no descubriste ningún secreto.</div>
+    </div>
+  </div>
+  <div class="small">Prototipo escolar. El conflicto del robo es ficticio y las decisiones no contienen instrucciones reales para cometer un delito.</div>
+</div>
+
+<script>
+const scenes={
+prologo:{ch:"Prólogo",title:"La caja de metal",text:"Hace seis años, el padre de Lucas perdió los ahorros de la familia en una estafa. El caso fue archivado por falta de pruebas. Una tarde, Lucas encuentra entre las cosas de su padre una fotografía de una caja de documentos con el sello del Banco Central de San Marcos. En el reverso hay una frase: «La verdad está donde nadie la busca». Lucas tiene que decidir qué hacer con esa pista.",choices:[
+["Investigar por su cuenta","Lucas empieza a buscar información pública y descubre que la historia tiene partes que nunca fueron explicadas.","investigar",{"sofia":5}],
+["Contárselo a Sofía","Lucas confía la pista a su amiga Sofía. Ella acepta ayudar, pero le pide que no haga nada impulsivo.","grupo",{"sofia":12}],
+["Ignorar la pista","Lucas intenta dejar el asunto atrás. Días después recibe un mensaje anónimo: «Si quieres saber la verdad, busca el banco».","mensaje",{"elias":-3}]]},
+mensaje:{ch:"Prólogo",title:"El mensaje",text:"El mensaje no tiene nombre. Lucas siente que alguien conoce su investigación. Decide contárselo a sus amigos antes de hacer cualquier cosa.",choices:[
+["Hablar con Sofía","Ella se toma el mensaje en serio y propone investigar juntos.","grupo",{"sofia":10}],
+["Hablar con Elías","Elías se preocupa y le recomienda no meterse en problemas. Aun así, acepta escuchar la historia.","grupo",{"elias":8}],
+["Seguir solo","Lucas guarda el mensaje y no se lo cuenta a nadie. Esto hará que más adelante tenga menos apoyo.","grupo",{"martin":-5}]]},
+investigar:{ch:"Capítulo 1",title:"Una historia incompleta",text:"Lucas encuentra referencias a una investigación antigua. Descubre que los documentos desaparecieron durante un traslado, pero no consigue saber adónde fueron. Necesita ayuda.",choices:[
+["Buscar a Sofía","Sofía es buena investigando y empieza a comparar las versiones de la historia.","grupo",{"sofia":12}],
+["Buscar a Martín","Martín conoce a mucha gente de la ciudad y puede ayudar a encontrar información.","grupo",{"martin":10}],
+["No contarle a nadie","Lucas continúa solo. Descubre una pista, pero no tiene a quién consultar cuando aparece una contradicción.","grupo",{"elias":-5}]]},
+grupo:{ch:"Capítulo 1",title:"Los cinco",text:"Lucas reúne a Sofía, Martín, Nico y Elías. Cada uno reacciona de manera diferente. Sofía quiere saber la verdad; Martín piensa en las consecuencias; Nico está emocionado por la aventura; Elías directamente cree que deberían detenerse.",choices:[
+["Escuchar a Sofía","Sofía explica que primero deberían entender la historia completa antes de tomar una decisión.","preparacion",{"sofia":10}],
+["Escuchar a Martín","Martín insiste en que una mala decisión puede afectar a todos, no solamente a Lucas.","preparacion",{"martin":10}],
+["Ignorar las dudas","Lucas dice que ya tomó una decisión. Elías empieza a perder confianza en él.","preparacion",{"elias":-15}]]},
+preparacion:{ch:"Capítulo 2",title:"Las primeras reuniones",text:"Durante varias semanas, el grupo se reúne para ordenar la información que tienen. Descubren que la antigua estafa puede estar relacionada con una empresa que quebró poco después. También descubren que alguien ha estado preguntando por los mismos documentos.",choices:[
+["Investigar quién pregunta por ellos","El grupo descubre una conexión con un antiguo empleado del banco.","secreto",{"sofia":12}],
+["Concentrarse solamente en los documentos","Consiguen ordenar parte de la historia, pero pasan por alto una pista importante.","diego",{"martin":-5}],
+["Preguntar a un adulto de confianza","La respuesta no resuelve el misterio, pero les recuerda que todavía existen alternativas legales.","legalchoice",{"elias":12}]]},
+secreto:{ch:"Capítulo 2",title:"El nombre que falta",text:"Sofía encuentra el nombre de un antiguo empleado relacionado con la investigación. Lo extraño es que su nombre desaparece de algunos registros y aparece en otros con una fecha diferente.",choices:[
+["Seguir la pista","Descubren que el empleado tenía una copia de documentos importantes.","diego",{"sofia":8}],
+["No arriesgarse","Deciden guardar la información y continuar por un camino más seguro.","legalchoice",{"elias":8}]]},
+legalchoice:{ch:"Capítulo 2",title:"Una alternativa",text:"Elías propone abandonar cualquier idea de robo y presentar la información a las autoridades o a un abogado. Lucas teme que nadie le crea después de tantos años.",choices:[
+["Aceptar la alternativa","El grupo empieza a recopilar pruebas. La historia puede terminar aquí, pero todavía existe un misterio por resolver.","finallegal",{"elias":15}],
+["Continuar con la investigación","Lucas quiere una prueba definitiva antes de decidir.","diego",{"sofia":5}]]},
+diego:{ch:"Capítulo 3",title:"Diego aparece",text:"Un conocido llamado Diego se entera de que están investigando el caso. Dice que conoce a alguien que trabajó cerca del banco y que podría tener información. Sofía desconfía de él.",choices:[
+["Confiar en Diego","Diego parece aportar una pieza importante del rompecabezas, pero también hace demasiadas preguntas.","traicion",{"sofia":-8}],
+["No confiar todavía","El grupo decide comprobar primero lo que Diego cuenta.","comprobar",{"sofia":10}],
+["Pedirle que se vaya","Diego se marcha molesto. Antes de irse dice: «No tienen idea de en qué se están metiendo».","preparacion2",{"elias":5}]]},
+comprobar:{ch:"Capítulo 3",title:"Contradicciones",text:"Sofía descubre que parte de la historia de Diego no coincide con documentos públicos. Ahora el grupo debe decidir cuánto quiere arriesgarse.",choices:[
+["Seguir investigando","Encuentran una conexión real, pero descubren que Diego también está buscando algo.","traicion",{"sofia":8}],
+["Abandonar la investigación","Elías se alegra de la decisión y el grupo comienza a buscar una solución legal.","finallegal",{"elias":15}],
+["Confrontar a Diego","Diego admite que no contó toda la verdad y que alguien le pidió averiguar qué sabía el grupo.","secreto2",{"martin":8}]]},
+secreto2:{ch:"Capítulo 3",title:"Alguien más está jugando",text:"Diego confiesa que otra persona está interesada en los documentos. No sabe exactamente quién es, pero asegura que esa persona lleva meses buscándolos.",choices:[
+["Creerle","El grupo comprende que el misterio es más grande de lo que pensaban.","preparacion2",{"sofia":5}],
+["No creerle","Lucas piensa que Diego intenta asustarlos. Sofía no está tan segura.","preparacion2",{"sofia":-5}],
+["Contarlo todo y retirarse","Deciden guardar las pruebas y abandonar el plan antes de que aparezca un problema mayor.","finallegal",{"elias":15}]]},
+preparacion2:{ch:"Capítulo 4",title:"La última reunión",text:"El grupo llega a una conclusión inquietante: los documentos podrían demostrar que la estafa fue mucho más grande de lo que creían. Lucas quiere ir al banco. Los demás dudan.",choices:[
+["Escuchar a Elías","Elías pide cancelar. Está convencido de que el grupo está cruzando un límite.","cancel",{"elias":15}],
+["Escuchar a Sofía","Sofía acepta continuar investigando, pero insiste en que deben estar preparados para abandonar todo si algo cambia.","dia",{"sofia":12}],
+["Seguir solamente a Lucas","Lucas decide que nadie puede hacerlo cambiar de opinión. La tensión dentro del grupo aumenta.","dia",{"elias":-18,"martin":-8}]]},
+cancel:{ch:"Capítulo 4",title:"Una decisión difícil",text:"El grupo cancela el plan. No todos están felices, pero por primera vez nadie tiene que fingir que está seguro de lo que está haciendo.",choices:[
+["Investigar por vías legales","Sofía conserva las pruebas y empieza una nueva investigación.","finallegal",{"sofia":10}],
+["Separarse","Cada integrante toma su propio camino. El misterio queda abierto.","finalseparados",{"martin":-5}]]},
+dia:{ch:"Capítulo 5",title:"El día decisivo",text:"El grupo llega al banco. Hay más movimiento del esperado y la tensión crece. Antes de hacer nada, Sofía recibe una noticia: los documentos podrían haber sido trasladados.",choices:[
+["Abandonar","Lucas acepta detenerse. El grupo se marcha y la historia cambia completamente.","abandono",{"elias":12}],
+["Continuar con el plan ficticio","La situación se complica inmediatamente. Una alarma ya ha sido activada y nadie del grupo lo sabe.","alarma",{"elias":-8}],
+["Escuchar a Sofía","Deciden investigar la nueva información en lugar de continuar.","copias",{"sofia":15}]]},
+alarma:{ch:"Capítulo 5",title:"El plan se rompe",text:"Una alarma se activa y el grupo comprende que la situación está fuera de control. No consiguen lo que buscaban y deben decidir si abandonar o asumir las consecuencias.",choices:[
+["Abandonar inmediatamente","El grupo evita que la situación empeore, pero ahora tendrá que explicar por qué estaba allí.","abandono",{"elias":10}],
+["Seguir buscando los documentos","Descubren que ya no están allí. Las sirenas se acercan y el grupo empieza a discutir.","consecuencia",{"elias":-15,"martin":-10}],
+["Contar la verdad","Elías convence al grupo de explicar por qué estaban allí y entregar la información que tienen.","finalverdad",{"elias":20}]]},
+copias:{ch:"Capítulo 5",title:"La segunda pista",text:"Sofía descubre que podrían existir copias de los documentos fuera del banco. La historia cambia: quizá nunca necesitaron entrar allí.",choices:[
+["Seguir la pista legal","El grupo empieza a reconstruir la historia usando las copias y testimonios disponibles.","finallegal",{"sofia":15}],
+["Volver al plan","Lucas cree que las copias no son suficientes y quiere continuar. Los demás empiezan a alejarse de él.","consecuencia",{"elias":-15}],
+["Contarle todo a la familia","Lucas decide que su familia merece conocer la nueva información.","finalfamilia",{"martin":10}]]},
+consecuencia:{ch:"Capítulo 6",title:"Las consecuencias",text:"La situación termina antes de que el grupo consiga lo que buscaba. Ahora deben responder por sus decisiones. Las relaciones que construiste durante la historia determinan quién se queda al lado de Lucas.",choices:[
+["Asumir la responsabilidad","Lucas decide contar toda la verdad.","finalverdad",{"elias":20}],
+["Culpar a los demás","El grupo se rompe. Sofía deja de confiar en Lucas y Martín se aleja.","finalseparados",{"sofia":-25,"martin":-20}],
+["Guardar silencio","Lucas intenta proteger al grupo, pero la culpa empieza a afectar sus relaciones.","finalsilencio",{"elias":-15,"sofia":-10}]]},
+traicion:{ch:"Capítulo 4",title:"La traición",text:"Diego desaparece después de conseguir información del grupo. Sofía descubre que alguien le pidió que averiguara cuánto sabían.",choices:[
+["Contarlo todo","El grupo entrega las pruebas y comienza a descubrir quién estaba detrás de Diego.","finalverdad",{"sofia":15}],
+["Buscar a Diego","Intentan hablar con él. Diego revela una última pista antes de desaparecer.","secretofinal",{"martin":8}],
+["Ignorarlo","Deciden no meterse más. Pero ahora saben que alguien conoce su investigación.","cancel",{"elias":8}]]},
+secretofinal:{ch:"Capítulo 6",title:"La pieza que faltaba",text:"Diego revela que los documentos originales no estaban en el banco desde hacía años. La pista de la caja fue dejada allí para que alguien la encontrara.",choices:[
+["Investigar quién dejó la pista","Descubren que alguien quería que Lucas siguiera exactamente ese camino.","finalverdad",{"sofia":15}],
+["Dejarlo atrás","Lucas comprende que la verdad de su familia no necesita convertirse en otro delito.","finallegal",{"elias":15}]]},
+finallegal:{ch:"FINAL",title:"La verdad por la vía legal",text:"Lucas y sus amigos reúnen las pruebas y buscan ayuda por vías legales. Después de mucho tiempo, descubren que la estafa fue real y que varias personas habían sido afectadas. Lucas consigue respuestas sin convertir el problema de su familia en un problema todavía mayor.",choices:[]},
+finalverdad:{ch:"FINAL",title:"La verdad sale a la luz",text:"El grupo cuenta todo lo que sabe. La investigación descubre que alguien había manipulado a varias personas para ocultar la antigua estafa. Los protagonistas también deben asumir responsabilidad por sus propias decisiones, pero finalmente la verdad aparece.",choices:[]},
+finalfamilia:{ch:"FINAL",title:"Una verdad para la familia",text:"Lucas lleva las nuevas pruebas a su familia. Por primera vez pueden hablar de lo ocurrido con información concreta. No recuperan mágicamente todo lo perdido, pero dejan de vivir con una historia llena de preguntas.",choices:[]},
+abandono:{ch:"FINAL",title:"A último momento",text:"El grupo decide detenerse. No consiguen los documentos, pero evitan que el problema crezca. Lucas queda frustrado, aunque con el tiempo comprende que abandonar una mala decisión también puede ser una buena decisión.",choices:[]},
+finalcancel:{ch:"FINAL",title:"El plan cancelado",text:"El robo nunca ocurre. El grupo se separa durante un tiempo y Lucas continúa buscando respuestas por otros medios. El misterio queda abierto para una posible segunda parte.",choices:[]},
+finalseparados:{ch:"FINAL",title:"El grupo se rompe",text:"Las decisiones tomadas destruyen la confianza entre los amigos. Cada uno sigue su camino y Lucas comprende que el verdadero costo del plan no fue el dinero, sino haber perdido a personas importantes.",choices:[]},
+finalsilencio:{ch:"FINAL",title:"El peso del silencio",text:"Lucas intenta proteger a todos guardando silencio. Sin embargo, las relaciones se deterioran porque nadie sabe qué piensa realmente. La historia termina con una pregunta: ¿habría sido mejor decir la verdad desde el principio?",choices:[]}
+};
+
+let state={current:"prologo",history:[],rel:{sofia:50,elias:50,martin:50},secrets:[]};
+
+function apply(changes){
+ if(!changes)return;
+ for(const k in changes) state.rel[k]=Math.max(0,Math.min(100,state.rel[k]+changes[k]));
+}
+function render(){
+ const nextButton=document.getElementById("continue");
+ if(nextButton) nextButton.classList.add("hidden");
+ const s=scenes[state.current];
+ document.getElementById("kicker").textContent=s.ch;
+ document.getElementById("heading").textContent=s.title;
+ document.getElementById("text").textContent=s.text;
+ document.getElementById("chapter").textContent=s.ch;
+ document.getElementById("count").textContent=state.history.length;
+ document.getElementById("bar").style.width=Math.min(100,state.history.length*9)+"%";
+ ["sofia","elias","martin"].forEach(x=>{document.getElementById(x).style.width=state.rel[x]+"%";document.getElementById(x+"N").textContent=state.rel[x]});
+ const box=document.getElementById("choices");box.innerHTML="";
+ document.getElementById("notice").classList.add("hidden");
+ s.choices.forEach(c=>{
+  const b=document.createElement("button");b.className="choice";
+  b.innerHTML="<b>"+c[0]+"</b><span>"+c[1]+"</span>";
+  b.onclick=()=>choose(c);box.appendChild(b);
+ });
+ if(!s.choices.length){
+  document.getElementById("bar").style.width="100%";
+  document.getElementById("notice").classList.remove("hidden");
+  document.getElementById("notice").innerHTML="<strong>Historia terminada.</strong> Reinicia para descubrir otro final.";
+ }
+ document.getElementById("back").disabled=state.history.length===0;
+}
+function choose(c){
+  // Save the current scene and relationships so "back" can undo the decision.
+  state.history.push({id:state.current,rel:{...state.rel}});
+  apply(c[3]);
+
+  // Show the consequence before moving to the next scene.
+  const choices=document.getElementById("choices");
+  choices.innerHTML="";
+  const note=document.getElementById("notice");
+  note.classList.remove("hidden");
+  note.innerHTML="<strong>Consecuencia</strong>"+c[1];
+
+  const nextButton=document.getElementById("continue");
+  nextButton.classList.remove("hidden");
+  nextButton.onclick=()=>{
+    state.current=c[2];
+    nextButton.classList.add("hidden");
+    render();
+  };
+
+  document.getElementById("back").disabled=false;
+  document.getElementById("count").textContent=state.history.length;
+  ["sofia","elias","martin"].forEach(x=>{
+    document.getElementById(x).style.width=state.rel[x]+"%";
+    document.getElementById(x+"N").textContent=state.rel[x];
+  });
+  document.getElementById("bar").style.width=Math.min(100,state.history.length*9)+"%";
+}
+
+document.getElementById("back").onclick=()=>{
+ if(!state.history.length)return;
+ const last=state.history.pop();
+ state.current=last.id;
+ state.rel={...last.rel};
+ document.getElementById("notice").classList.add("hidden");
+ document.getElementById("continue").classList.add("hidden");
+ render();
+};
+document.getElementById("restart").onclick=()=>{
+ state={current:"prologo",history:[],rel:{sofia:50,elias:50,martin:50},secrets:[]};render();
+};
+render();
+</script>
+</body>
+</html>
