@@ -154,7 +154,6 @@ function apply(changes){
  for(const k in changes) state.rel[k]=Math.max(0,Math.min(100,state.rel[k]+changes[k]));
 }
 function render(){
- function render(){
  const nextButton=document.getElementById("continue");
  if(nextButton) nextButton.classList.add("hidden");
 
