@@ -156,9 +156,7 @@ function apply(changes){
 function render(){
  const nextButton=document.getElementById("continue");
  if(nextButton) nextButton.classList.add("hidden");
- const s=scenes[state.current];const relationsBox=document.getElementById("relationsBox");
-const relationsVisible=state.current!=="prologo" && state.current!=="mensaje" && state.current!=="investigar";
-
+ const s=scenes[state.current];
 relationsBox.style.display=relationsVisible ? "block" : "none";
  document.getElementById("heading").textContent=s.title;
  document.getElementById("text").textContent=s.text;
