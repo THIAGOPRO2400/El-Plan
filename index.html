@@ -157,7 +157,9 @@ function render(){
  const nextButton=document.getElementById("continue");
  if(nextButton) nextButton.classList.add("hidden");
  const s=scenes[state.current];
- document.getElementById("kicker").textContent=s.ch;
+const relationsBox=document.getElementById("relationsBox");
+const relationsVisible=state.current!=="prologo" && state.current!=="mensaje" && state.current!=="investigar";
+relationsBox.style.display=relationsVisible ? "block" : "none"; document.getElementById("kicker").textContent=s.ch;
  document.getElementById("heading").textContent=s.title;
  document.getElementById("text").textContent=s.text;
  document.getElementById("chapter").textContent=s.ch;
